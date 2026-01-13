@@ -3,21 +3,39 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action-v1@v1
-        id: buildozer
+      # 1. Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          python-version: '3.9'
 
-      - name: Upload artifacts
+      # 2. Install Dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git python3-dev \
+            ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev \
+            libsdl2-ttf-dev libportmidi-dev libswscale-dev \
+            libavformat-dev libavcodec-dev zlib1g-dev libssl-dev \
+            autoconf libtool pkg-config zip
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+
+      # 3. Build the APK (Standard Way)
+      - name: Build with Buildozer
+        run: |
+          yes | buildozer android debug
+
+      # 4. Upload the APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: WeatherApp-APK
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
           
