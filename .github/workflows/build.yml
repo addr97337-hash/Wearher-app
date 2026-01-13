@@ -1,40 +1,23 @@
-name: Build Android APK
+name: Build
 on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      # 1. Setup Python
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.10'
-
-      # 2. Install Buildozer and Dependencies
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            python3-pip build-essential git python3-dev \
-            ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev \
-            libsdl2-ttf-dev libportmidi-dev libswscale-dev \
-            libavformat-dev libavcodec-dev zlib1g-dev
-          pip install --upgrade pip
-          pip install buildozer cython
-
-      # 3. Build the APK
       - name: Build with Buildozer
-        run: |
-          # We force accept the license agreement
-          yes | buildozer android debug
+        uses: ArtemSBulgakov/buildozer-action-v1@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: master
 
-      # 4. Upload the APK so you can download it
-      - name: Upload APK
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: WeatherApp-APK
-          path: bin/*.apk
+          path: ${{ steps.buildozer.outputs.filename }}
+          
